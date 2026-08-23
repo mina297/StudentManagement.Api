@@ -42,6 +42,12 @@ namespace StudentManagement.Api.Controllers
             return Ok(_studentService.GetDepartmentStatistics());
         }
 
+        [HttpGet("highest-lowest")]
+        public IActionResult GetHighestAndLowest()
+        {
+            return Ok(_studentService.GetHighestAndLowestDepartments());
+        }
+
         [HttpPost]
         public IActionResult Create([FromBody] CreateDepartmentDto newDepartment)
         {

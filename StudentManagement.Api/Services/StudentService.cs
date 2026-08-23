@@ -137,5 +137,22 @@ namespace StudentManagement.Api.Services
                 };
             }).ToList();
         }
+
+        public List<DepartmentStatisticsDto> GetHighestAndLowestDepartments()
+        {
+            var stats = GetDepartmentStatistics();
+
+            if (!stats.Any())
+            {
+                return new List<DepartmentStatisticsDto>();
+            }
+
+            var maxCount = stats.Max(s => s.StudentsCount);
+            var minCount = stats.Min(s => s.StudentsCount);
+
+            return stats
+                .Where(s => s.StudentsCount == maxCount || s.StudentsCount == minCount)
+                .ToList();
+        }
     }
 }

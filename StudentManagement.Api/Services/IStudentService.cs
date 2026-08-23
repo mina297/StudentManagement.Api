@@ -12,5 +12,6 @@ namespace StudentManagement.Api.Services
         List<StudentDetailsDto> Search(string name);
         List<StudentDetailsDto> GetStudentsBetween18And22();
         List<DepartmentStatisticsDto> GetDepartmentStatistics();
+        List<DepartmentStatisticsDto> GetHighestAndLowestDepartments();
     }
 }
