@@ -11,5 +11,6 @@ namespace StudentManagement.Api.Services
         bool Delete(int id);
         List<StudentDetailsDto> Search(string name);
         List<StudentDetailsDto> GetStudentsBetween18And22();
+        List<DepartmentStatisticsDto> GetDepartmentStatistics();
     }
 }

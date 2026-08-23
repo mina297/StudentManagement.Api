@@ -9,10 +9,12 @@ namespace StudentManagement.Api.Controllers
     public class DepartmentsController : ControllerBase
     {
         private readonly IDepartmentService _departmentService;
+        private readonly IStudentService _studentService;
 
-        public DepartmentsController(IDepartmentService departmentService)
+        public DepartmentsController(IDepartmentService departmentService, IStudentService studentService)
         {
             _departmentService = departmentService;
+            _studentService = studentService;
         }
 
         [HttpGet]
@@ -32,6 +34,12 @@ namespace StudentManagement.Api.Controllers
             }
 
             return Ok(department);
+        }
+
+        [HttpGet("statistics")]
+        public IActionResult GetStatistics()
+        {
+            return Ok(_studentService.GetDepartmentStatistics());
         }
 
         [HttpPost]

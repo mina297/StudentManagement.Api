@@ -119,5 +119,23 @@ namespace StudentManagement.Api.Services
                 .Select(MapToDto)
                 .ToList();
         }
+        public List<DepartmentStatisticsDto> GetDepartmentStatistics()
+        {
+            var departments = _departmentService.GetAll();
+
+            return departments.Select(d =>
+            {
+                var studentsInDept = students.Where(s => s.DepartmentId == d.Id).ToList();
+
+                return new DepartmentStatisticsDto
+                {
+                    DepartmentName = d.Name,
+                    StudentsCount = studentsInDept.Count,
+                    AverageAge = studentsInDept.Any() ? studentsInDept.Average(s => s.Age) : 0,
+                    OldestAge = studentsInDept.Any() ? studentsInDept.Max(s => s.Age) : 0,
+                    YoungestAge = studentsInDept.Any() ? studentsInDept.Min(s => s.Age) : 0
+                };
+            }).ToList();
+        }
     }
 }
