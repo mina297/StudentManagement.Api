@@ -55,18 +55,24 @@ namespace StudentManagement.Api.Controllers
         [HttpPost]
         public IActionResult Create([FromBody] CreateStudentDto newStudent)
         {
-            var student = _studentService.Add(newStudent);
+            var (student, error) = _studentService.Add(newStudent);
+
+            if (error != null)
+            {
+                return BadRequest(error);
+            }
+
             return Ok(student);
         }
 
         [HttpPut("{id}")]
         public IActionResult Update(int id, [FromBody] UpdateStudentDto updatedStudent)
         {
-            var student = _studentService.Update(id, updatedStudent);
+            var (student, error) = _studentService.Update(id, updatedStudent);
 
-            if (student == null)
+            if (error != null)
             {
-                return NotFound();
+                return BadRequest(error);
             }
 
             return Ok(student);

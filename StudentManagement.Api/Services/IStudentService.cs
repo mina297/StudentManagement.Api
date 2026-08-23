@@ -6,8 +6,8 @@ namespace StudentManagement.Api.Services
     {
         List<StudentDetailsDto> GetAll();
         StudentDetailsDto? GetById(int id);
-        StudentDetailsDto Add(CreateStudentDto newStudent);
-        StudentDetailsDto? Update(int id, UpdateStudentDto updatedStudent);
+        (StudentDetailsDto? Student, string? Error) Add(CreateStudentDto newStudent);
+        (StudentDetailsDto? Student, string? Error) Update(int id, UpdateStudentDto updatedStudent);
         bool Delete(int id);
         List<StudentDetailsDto> Search(string name);
         List<StudentDetailsDto> GetStudentsBetween18And22();

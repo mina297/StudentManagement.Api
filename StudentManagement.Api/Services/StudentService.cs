@@ -5,13 +5,7 @@ namespace StudentManagement.Api.Services
 {
     public class StudentService : IStudentService
     {
-        private static List<Department> departments = new List<Department>
-        {
-            new Department { Id = 1, Name = "IT" },
-            new Department { Id = 2, Name = "HR" },
-            new Department { Id = 3, Name = "Finance" },
-            new Department { Id = 4, Name = "Sales" }
-        };
+        private readonly IDepartmentService _departmentService;
 
         private static List<Student> students = new List<Student>
         {
@@ -22,9 +16,14 @@ namespace StudentManagement.Api.Services
             new Student { Id = 5, Name = "Youssef Mahmoud", Age = 18, DepartmentId = 1 }
         };
 
+        public StudentService(IDepartmentService departmentService)
+        {
+            _departmentService = departmentService;
+        }
+
         private StudentDetailsDto MapToDto(Student student)
         {
-            var department = departments.FirstOrDefault(d => d.Id == student.DepartmentId);
+            var department = _departmentService.GetById(student.DepartmentId);
 
             return new StudentDetailsDto
             {
@@ -46,8 +45,15 @@ namespace StudentManagement.Api.Services
             return student == null ? null : MapToDto(student);
         }
 
-        public StudentDetailsDto Add(CreateStudentDto newStudent)
+        public (StudentDetailsDto? Student, string? Error) Add(CreateStudentDto newStudent)
         {
+            var department = _departmentService.GetById(newStudent.DepartmentId);
+
+            if (department == null)
+            {
+                return (null, "Department does not exist.");
+            }
+
             var student = new Student
             {
                 Id = students.Max(s => s.Id) + 1,
@@ -58,23 +64,30 @@ namespace StudentManagement.Api.Services
 
             students.Add(student);
 
-            return MapToDto(student);
+            return (MapToDto(student), null);
         }
 
-        public StudentDetailsDto? Update(int id, UpdateStudentDto updatedStudent)
+        public (StudentDetailsDto? Student, string? Error) Update(int id, UpdateStudentDto updatedStudent)
         {
             var student = students.FirstOrDefault(s => s.Id == id);
 
             if (student == null)
             {
-                return null;
+                return (null, "Student not found.");
+            }
+
+            var department = _departmentService.GetById(updatedStudent.DepartmentId);
+
+            if (department == null)
+            {
+                return (null, "Department does not exist.");
             }
 
             student.Name = updatedStudent.Name;
             student.Age = updatedStudent.Age;
             student.DepartmentId = updatedStudent.DepartmentId;
 
-            return MapToDto(student);
+            return (MapToDto(student), null);
         }
 
         public bool Delete(int id)
