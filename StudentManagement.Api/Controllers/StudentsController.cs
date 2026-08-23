@@ -7,13 +7,21 @@ namespace StudentManagement.Api.Controllers
     [Route("api/students")]
     public class StudentsController : ControllerBase
     {
+        private static List<Department> departments = new List<Department>
+        {
+            new Department { Id = 1, Name = "IT" },
+            new Department { Id = 2, Name = "HR" },
+            new Department { Id = 3, Name = "Finance" },
+            new Department { Id = 4, Name = "Sales" }
+        };
+
         private static List<Student> students = new List<Student>
         {
-            new Student { Id = 1, Name = "Mina Elkomos Samaan", Age = 20, DepartmentName = "IT" },
-            new Student { Id = 2, Name = "Sara Ali", Age = 21, DepartmentName = "HR" },
-            new Student { Id = 3, Name = "Mostafa Hassan", Age = 19, DepartmentName = "Finance" },
-            new Student { Id = 4, Name = "Nour Ibrahim", Age = 22, DepartmentName = "Sales" },
-            new Student { Id = 5, Name = "Youssef Mahmoud", Age = 18, DepartmentName = "Marketing" }
+            new Student { Id = 1, Name = "Mina Elkomos Samaan", Age = 20, DepartmentId = 1 },
+            new Student { Id = 2, Name = "Sara Ali", Age = 21, DepartmentId = 2 },
+            new Student { Id = 3, Name = "Mostafa Hassan", Age = 19, DepartmentId = 3 },
+            new Student { Id = 4, Name = "Nour Ibrahim", Age = 22, DepartmentId = 4 },
+            new Student { Id = 5, Name = "Youssef Mahmoud", Age = 18, DepartmentId = 1 }
         };
 
         [HttpGet("welcome")]
@@ -75,7 +83,7 @@ namespace StudentManagement.Api.Controllers
                 Id = students.Max(s => s.Id) + 1,
                 Name = newStudent.Name,
                 Age = newStudent.Age,
-                DepartmentName = newStudent.DepartmentName
+                DepartmentId = newStudent.DepartmentId
             };
 
             students.Add(student);
@@ -98,7 +106,7 @@ namespace StudentManagement.Api.Controllers
 
             student.Name = updatedStudent.Name;
             student.Age = updatedStudent.Age;
-            student.DepartmentName = updatedStudent.DepartmentName;
+            student.DepartmentId = updatedStudent.DepartmentId;
 
             return Ok(student);
         }
