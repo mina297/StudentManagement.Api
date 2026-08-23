@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using StudentManagement.Api.Models;
 using StudentManagement.Api.Dtos;
+using StudentManagement.Api.Services;
 
 namespace StudentManagement.Api.Controllers
 {
@@ -8,22 +8,12 @@ namespace StudentManagement.Api.Controllers
     [Route("api/students")]
     public class StudentsController : ControllerBase
     {
-        private static List<Department> departments = new List<Department>
-        {
-            new Department { Id = 1, Name = "IT" },
-            new Department { Id = 2, Name = "HR" },
-            new Department { Id = 3, Name = "Finance" },
-            new Department { Id = 4, Name = "Sales" }
-        };
+        private readonly IStudentService _studentService;
 
-        private static List<Student> students = new List<Student>
+        public StudentsController(IStudentService studentService)
         {
-            new Student { Id = 1, Name = "Mina Elkomos Samaan", Age = 20, DepartmentId = 1 },
-            new Student { Id = 2, Name = "Sara Ali", Age = 21, DepartmentId = 2 },
-            new Student { Id = 3, Name = "Mostafa Hassan", Age = 19, DepartmentId = 3 },
-            new Student { Id = 4, Name = "Nour Ibrahim", Age = 22, DepartmentId = 4 },
-            new Student { Id = 5, Name = "Youssef Mahmoud", Age = 18, DepartmentId = 1 }
-        };
+            _studentService = studentService;
+        }
 
         [HttpGet("welcome")]
         public IActionResult Welcome()
@@ -34,13 +24,13 @@ namespace StudentManagement.Api.Controllers
         [HttpGet]
         public IActionResult GetAll()
         {
-            return Ok(students);
+            return Ok(_studentService.GetAll());
         }
 
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
-            var student = students.FirstOrDefault(s => s.Id == id);
+            var student = _studentService.GetById(id);
 
             if (student == null)
             {
@@ -49,82 +39,48 @@ namespace StudentManagement.Api.Controllers
 
             return Ok(student);
         }
-
 
         [HttpGet("search")]
         public IActionResult Search([FromQuery] string name)
         {
-            var result = students
-                .Where(s => s.Name.Contains(name, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-
-            return Ok(result);
+            return Ok(_studentService.Search(name));
         }
-
 
         [HttpGet("filter-by-age")]
         public IActionResult FilterByAge()
         {
-            var result = students
-                .Where(s => s.Age >= 18 && s.Age <= 22)
-                .OrderBy(s => s.Age)
-                .ToList();
-
-            return Ok(result);
+            return Ok(_studentService.GetStudentsBetween18And22());
         }
-
-
-
 
         [HttpPost]
         public IActionResult Create([FromBody] CreateStudentDto newStudent)
         {
-            var student = new Student
-            {
-                Id = students.Max(s => s.Id) + 1,
-                Name = newStudent.Name,
-                Age = newStudent.Age,
-                DepartmentId = newStudent.DepartmentId
-            };
-
-            students.Add(student);
-
+            var student = _studentService.Add(newStudent);
             return Ok(student);
         }
 
-
-
-
         [HttpPut("{id}")]
-        public IActionResult Update(int id, [FromBody] CreateStudentDto updatedStudent)
+        public IActionResult Update(int id, [FromBody] UpdateStudentDto updatedStudent)
         {
-            var student = students.FirstOrDefault(s => s.Id == id);
+            var student = _studentService.Update(id, updatedStudent);
 
             if (student == null)
             {
                 return NotFound();
             }
 
-            student.Name = updatedStudent.Name;
-            student.Age = updatedStudent.Age;
-            student.DepartmentId = updatedStudent.DepartmentId;
-
             return Ok(student);
         }
-
-
 
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            var student = students.FirstOrDefault(s => s.Id == id);
+            var deleted = _studentService.Delete(id);
 
-            if (student == null)
+            if (!deleted)
             {
                 return NotFound();
             }
-
-            students.Remove(student);
 
             return Ok();
         }
