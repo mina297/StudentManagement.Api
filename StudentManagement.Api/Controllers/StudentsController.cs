@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using StudentManagement.Api.Models;
+using StudentManagement.Api.Dtos;
 
 namespace StudentManagement.Api.Controllers
 {
