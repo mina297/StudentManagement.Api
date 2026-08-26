@@ -1,63 +1,93 @@
-﻿using StudentManagement.Api.Dtos;
+﻿using Microsoft.EntityFrameworkCore;
+using StudentManagement.Api.Data;
+using StudentManagement.Api.Dtos;
 using StudentManagement.Api.Models;
 
 namespace StudentManagement.Api.Services
 {
     public class DepartmentService : IDepartmentService
     {
-        private static List<Department> departments = new List<Department>
+        private readonly ApplicationDbContext _context;
+
+        public DepartmentService(ApplicationDbContext context)
         {
-            new Department { Id = 1, Name = "IT" },
-            new Department { Id = 2, Name = "HR" },
-            new Department { Id = 3, Name = "Finance" },
-            new Department { Id = 4, Name = "Sales" }
-        };
+            _context = context;
+        }
 
         public List<Department> GetAll()
         {
-            return departments;
+            return _context.Departments.ToList();
         }
 
         public Department? GetById(int id)
         {
-            return departments.FirstOrDefault(d => d.Id == id);
+            return _context.Departments.FirstOrDefault(d => d.Id == id);
         }
 
-        public Department Add(CreateDepartmentDto newDepartment)
+        public (Department? Department, string? Error) Add(CreateDepartmentDto newDepartment)
         {
+            if (string.IsNullOrWhiteSpace(newDepartment.Name))
+            {
+                return (null, "Department name is required.");
+            }
+
+            var nameExists = _context.Departments.Any(d => d.Name.ToLower() == newDepartment.Name.ToLower());
+
+            if (nameExists)
+            {
+                return (null, "Department name already exists.");
+            }
+
             var department = new Department
             {
-                Id = departments.Max(d => d.Id) + 1,
                 Name = newDepartment.Name
             };
 
-            departments.Add(department);
-            return department;
+            _context.Departments.Add(department);
+            _context.SaveChanges();
+
+            return (department, null);
         }
 
-        public Department? Update(int id, UpdateDepartmentDto updatedDepartment)
+        public (Department? Department, string? Error) Update(int id, UpdateDepartmentDto updatedDepartment)
         {
-            var department = departments.FirstOrDefault(d => d.Id == id);
+            var department = _context.Departments.FirstOrDefault(d => d.Id == id);
 
             if (department == null)
             {
-                return null;
+                return (null, "Department not found.");
+            }
+
+            if (string.IsNullOrWhiteSpace(updatedDepartment.Name))
+            {
+                return (null, "Department name is required.");
+            }
+
+            var nameExists = _context.Departments.Any(d => d.Id != id && d.Name.ToLower() == updatedDepartment.Name.ToLower());
+
+            if (nameExists)
+            {
+                return (null, "Department name already exists.");
             }
 
             department.Name = updatedDepartment.Name;
-            return department;
+            _context.SaveChanges();
+
+            return (department, null);
         }
 
         public bool Delete(int id)
         {
-            var department = departments.FirstOrDefault(d => d.Id == id);
+            var department = _context.Departments.FirstOrDefault(d => d.Id == id);
 
             if (department == null)
             {
                 return false;
             }
 
-            departments.Remove(department);
+            _context.Departments.Remove(department);
+            _context.SaveChanges();
+
             return true;
         }
     }

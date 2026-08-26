@@ -51,18 +51,24 @@ namespace StudentManagement.Api.Controllers
         [HttpPost]
         public IActionResult Create([FromBody] CreateDepartmentDto newDepartment)
         {
-            var department = _departmentService.Add(newDepartment);
+            var (department, error) = _departmentService.Add(newDepartment);
+
+            if (error != null)
+            {
+                return BadRequest(error);
+            }
+
             return Ok(department);
         }
 
         [HttpPut("{id}")]
         public IActionResult Update(int id, [FromBody] UpdateDepartmentDto updatedDepartment)
         {
-            var department = _departmentService.Update(id, updatedDepartment);
+            var (department, error) = _departmentService.Update(id, updatedDepartment);
 
-            if (department == null)
+            if (error != null)
             {
-                return NotFound();
+                return BadRequest(error);
             }
 
             return Ok(department);

@@ -41,9 +41,9 @@ namespace StudentManagement.Api.Controllers
         }
 
         [HttpGet("search")]
-        public IActionResult Search([FromQuery] string name)
+        public IActionResult Search([FromQuery] string text)
         {
-            return Ok(_studentService.Search(name));
+            return Ok(_studentService.Search(text));
         }
 
         [HttpGet("filter-by-age")]

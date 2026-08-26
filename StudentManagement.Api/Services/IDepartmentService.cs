@@ -7,8 +7,8 @@ namespace StudentManagement.Api.Services
     {
         List<Department> GetAll();
         Department? GetById(int id);
-        Department Add(CreateDepartmentDto newDepartment);
-        Department? Update(int id, UpdateDepartmentDto updatedDepartment);
+        (Department? Department, string? Error) Add(CreateDepartmentDto newDepartment);
+        (Department? Department, string? Error) Update(int id, UpdateDepartmentDto updatedDepartment);
         bool Delete(int id);
     }
 }

@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using StudentManagement.Api.Data;
 using StudentManagement.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,8 +8,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

@@ -1,84 +1,104 @@
-﻿using StudentManagement.Api.Dtos;
+﻿using Microsoft.EntityFrameworkCore;
+using StudentManagement.Api.Data;
+using StudentManagement.Api.Dtos;
 using StudentManagement.Api.Models;
 
 namespace StudentManagement.Api.Services
 {
     public class StudentService : IStudentService
     {
-        private readonly IDepartmentService _departmentService;
+        private readonly ApplicationDbContext _context;
 
-        private static List<Student> students = new List<Student>
+        public StudentService(ApplicationDbContext context)
         {
-            new Student { Id = 1, Name = "Mina Elkomos Samaan", Age = 20, DepartmentId = 1 },
-            new Student { Id = 2, Name = "Sara Ali", Age = 21, DepartmentId = 2 },
-            new Student { Id = 3, Name = "Mostafa Hassan", Age = 19, DepartmentId = 3 },
-            new Student { Id = 4, Name = "Nour Ibrahim", Age = 22, DepartmentId = 4 },
-            new Student { Id = 5, Name = "Youssef Mahmoud", Age = 18, DepartmentId = 1 }
-        };
-
-        public StudentService(IDepartmentService departmentService)
-        {
-            _departmentService = departmentService;
+            _context = context;
         }
 
         private StudentDetailsDto MapToDto(Student student)
         {
-            var department = _departmentService.GetById(student.DepartmentId);
-
             return new StudentDetailsDto
             {
                 Id = student.Id,
                 Name = student.Name,
                 Age = student.Age,
-                DepartmentName = department != null ? department.Name : "Unknown"
+                DepartmentName = student.Department != null ? student.Department.Name : "Unknown"
             };
         }
 
         public List<StudentDetailsDto> GetAll()
         {
-            return students.Select(MapToDto).ToList();
+            var studentsList = _context.Students
+                .Include(s => s.Department)
+                .ToList();
+
+            return studentsList.Select(MapToDto).ToList();
         }
 
         public StudentDetailsDto? GetById(int id)
         {
-            var student = students.FirstOrDefault(s => s.Id == id);
+            var student = _context.Students
+                .Include(s => s.Department)
+                .FirstOrDefault(s => s.Id == id);
+
             return student == null ? null : MapToDto(student);
         }
 
         public (StudentDetailsDto? Student, string? Error) Add(CreateStudentDto newStudent)
         {
-            var department = _departmentService.GetById(newStudent.DepartmentId);
+            if (string.IsNullOrWhiteSpace(newStudent.Name))
+            {
+                return (null, "Name is required.");
+            }
 
-            if (department == null)
+            if (newStudent.Age < 18 || newStudent.Age > 60)
+            {
+                return (null, "Age must be between 18 and 60.");
+            }
+
+            var departmentExists = _context.Departments.Any(d => d.Id == newStudent.DepartmentId);
+
+            if (!departmentExists)
             {
                 return (null, "Department does not exist.");
             }
 
             var student = new Student
             {
-                Id = students.Max(s => s.Id) + 1,
                 Name = newStudent.Name,
                 Age = newStudent.Age,
                 DepartmentId = newStudent.DepartmentId
             };
 
-            students.Add(student);
+            _context.Students.Add(student);
+            _context.SaveChanges();
+
+            _context.Entry(student).Reference(s => s.Department).Load();
 
             return (MapToDto(student), null);
         }
 
         public (StudentDetailsDto? Student, string? Error) Update(int id, UpdateStudentDto updatedStudent)
         {
-            var student = students.FirstOrDefault(s => s.Id == id);
+            var student = _context.Students.FirstOrDefault(s => s.Id == id);
 
             if (student == null)
             {
                 return (null, "Student not found.");
             }
 
-            var department = _departmentService.GetById(updatedStudent.DepartmentId);
+            if (string.IsNullOrWhiteSpace(updatedStudent.Name))
+            {
+                return (null, "Name is required.");
+            }
 
-            if (department == null)
+            if (updatedStudent.Age < 18 || updatedStudent.Age > 60)
+            {
+                return (null, "Age must be between 18 and 60.");
+            }
+
+            var departmentExists = _context.Departments.Any(d => d.Id == updatedStudent.DepartmentId);
+
+            if (!departmentExists)
             {
                 return (null, "Department does not exist.");
             }
@@ -87,45 +107,56 @@ namespace StudentManagement.Api.Services
             student.Age = updatedStudent.Age;
             student.DepartmentId = updatedStudent.DepartmentId;
 
+            _context.SaveChanges();
+
+            _context.Entry(student).Reference(s => s.Department).Load();
+
             return (MapToDto(student), null);
         }
 
         public bool Delete(int id)
         {
-            var student = students.FirstOrDefault(s => s.Id == id);
+            var student = _context.Students.FirstOrDefault(s => s.Id == id);
 
             if (student == null)
             {
                 return false;
             }
 
-            students.Remove(student);
+            _context.Students.Remove(student);
+            _context.SaveChanges();
+
             return true;
         }
 
-        public List<StudentDetailsDto> Search(string name)
+                public List<StudentDetailsDto> Search(string name)
         {
-            return students
-                .Where(s => s.Name.Contains(name, StringComparison.OrdinalIgnoreCase))
-                .Select(MapToDto)
+            var studentsList = _context.Students
+                .Include(s => s.Department)
+                .Where(s => s.Name.Contains(name) || (s.Department != null && s.Department.Name.Contains(name)))
                 .ToList();
+
+            return studentsList.Select(MapToDto).ToList();
         }
 
         public List<StudentDetailsDto> GetStudentsBetween18And22()
         {
-            return students
+            var studentsList = _context.Students
+                .Include(s => s.Department)
                 .Where(s => s.Age >= 18 && s.Age <= 22)
                 .OrderBy(s => s.Age)
-                .Select(MapToDto)
                 .ToList();
+
+            return studentsList.Select(MapToDto).ToList();
         }
+
         public List<DepartmentStatisticsDto> GetDepartmentStatistics()
         {
-            var departments = _departmentService.GetAll();
+            var departments = _context.Departments.Include(d => d.Students).ToList();
 
             return departments.Select(d =>
             {
-                var studentsInDept = students.Where(s => s.DepartmentId == d.Id).ToList();
+                var studentsInDept = d.Students ?? new List<Student>();
 
                 return new DepartmentStatisticsDto
                 {
